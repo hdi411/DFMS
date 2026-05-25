@@ -1,32 +1,35 @@
-import { drones } from '../data/drones'
-import { systemLogs } from '../data/logs'
+import { useApp } from '../context/AppContext'
 
-export default function Dashboard({ user, onNavigate, onOverride, alertCount }) {
+function BatteryBar({ pct }) {
+  const color = pct > 60 ? 'var(--acc)' : pct > 35 ? 'var(--warn)' : 'var(--danger)'
+  return (
+    <div className="bat-wrap">
+      <div className="bat-bar">
+        <div className="bat-fill" style={{ width: pct + '%', background: color }} />
+      </div>
+      {pct}%
+    </div>
+  )
+}
+
+function StatusPill({ status }) {
+  const map = {
+    inflight:    { cls: 'pill-inflight',    label: '✈ In Flight' },
+    ready:       { cls: 'pill-ready',       label: '● Ready' },
+    maintenance: { cls: 'pill-maintenance', label: '🔧 Maintenance' },
+    critical:    { cls: 'pill-critical',    label: '⚠ Conn. Loss' },
+    preflight:   { cls: 'pill-preflight',   label: '🔍 Pre-flight' },
+  }
+  const s = map[status] || map.ready
+  return <span className={`pill ${s.cls}`}>{s.label}</span>
+}
+
+export default function Dashboard({ user, onNavigate, onOverride }) {
+  const { drones, alerts, logs } = useApp()
   const isMgr = user.role === 'manager'
 
-  function BatteryBar({ pct }) {
-    const color = pct > 60 ? 'var(--acc)' : pct > 35 ? 'var(--warn)' : 'var(--danger)'
-    return (
-      <div className="bat-wrap">
-        <div className="bat-bar">
-          <div className="bat-fill" style={{ width: pct + '%', background: color }} />
-        </div>
-        {pct}%
-      </div>
-    )
-  }
-
-  function StatusPill({ status }) {
-    const map = {
-      inflight:    { cls: 'pill-inflight',    label: '✈ In Flight' },
-      ready:       { cls: 'pill-ready',       label: '● Ready' },
-      maintenance: { cls: 'pill-maintenance', label: '🔧 Maintenance' },
-      critical:    { cls: 'pill-critical',    label: '⚠ Conn. Loss' },
-      preflight:   { cls: 'pill-preflight',   label: '🔍 Pre-flight' },
-    }
-    const s = map[status] || map.ready
-    return <span className={`pill ${s.cls}`}>{s.label}</span>
-  }
+  const inFlight = drones.filter(d => d.status === 'inflight').length
+  const active   = drones.filter(d => d.status !== 'maintenance').length
 
   return (
     <div>
@@ -40,11 +43,9 @@ export default function Dashboard({ user, onNavigate, onOverride, alertCount }) 
           </div>
         </div>
         {isMgr && (
-          <div className="btn-row">
-            <button className="btn btn-danger" onClick={onOverride}>
-              ⚠️ Emergency Override
-            </button>
-          </div>
+          <button className="btn btn-danger" onClick={onOverride}>
+            ⚠️ Emergency Override
+          </button>
         )}
       </div>
 
@@ -52,18 +53,22 @@ export default function Dashboard({ user, onNavigate, onOverride, alertCount }) 
       <div className="metrics-grid">
         <div className="metric-card">
           <div className="metric-label">🚁 Active Drones</div>
-          <div className="metric-value good">6</div>
-          <div className="metric-delta">of 8 in fleet</div>
+          <div className="metric-value good">{active}</div>
+          <div className="metric-delta">of {drones.length} in fleet</div>
         </div>
         <div className="metric-card">
           <div className="metric-label">✈️ In Flight</div>
-          <div className="metric-value good">3</div>
-          <div className="metric-delta">across 2 wind farms</div>
+          <div className="metric-value good">{inFlight}</div>
+          <div className="metric-delta">across wind farms</div>
         </div>
         <div className="metric-card">
           <div className="metric-label">🔔 Active Alerts</div>
-          <div className={`metric-value ${alertCount > 0 ? 'bad' : 'good'}`}>{alertCount}</div>
-          <div className="metric-delta">{alertCount > 0 ? '1 critical' : 'All clear'}</div>
+          <div className={`metric-value ${alerts.length > 0 ? 'bad' : 'good'}`}>
+            {alerts.length}
+          </div>
+          <div className="metric-delta">
+            {alerts.length > 0 ? `${alerts.filter(a => a.type === 'critical').length} critical` : 'All clear'}
+          </div>
         </div>
         <div className="metric-card">
           <div className="metric-label">✅ Tasks Today</div>
@@ -73,21 +78,18 @@ export default function Dashboard({ user, onNavigate, onOverride, alertCount }) 
       </div>
 
       <div className="two-col">
-        {/* FLEET STATUS */}
+        {/* FLEET */}
         <div>
           <div className="card">
             <div className="card-header">
               <div className="card-title">Fleet Status</div>
-              <button className="btn btn-sm" onClick={() => onNavigate('drones')}>View all →</button>
+              <button className="btn btn-sm" onClick={() => onNavigate('drones')}>
+                View all →
+              </button>
             </div>
             <table className="data-table">
               <thead>
-                <tr>
-                  <th>Drone ID</th>
-                  <th>Location</th>
-                  <th>Battery</th>
-                  <th>Status</th>
-                </tr>
+                <tr><th>Drone ID</th><th>Location</th><th>Battery</th><th>Status</th></tr>
               </thead>
               <tbody>
                 {drones.slice(0, 6).map(d => (
@@ -108,34 +110,31 @@ export default function Dashboard({ user, onNavigate, onOverride, alertCount }) 
           <div className="card">
             <div className="card-header">
               <div className="card-title">🔔 Active Alerts</div>
-              <button className="btn btn-sm" onClick={() => onNavigate('alerts')}>View all →</button>
+              <button className="btn btn-sm" onClick={() => onNavigate('alerts')}>
+                View all →
+              </button>
             </div>
-            {alertCount === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text3)', fontSize: 12 }}>
+            {alerts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 20, color: 'var(--text3)', fontSize: 12 }}>
                 ✅ No active alerts
               </div>
             ) : (
-              <>
-                <div className="alert-card alert-critical">
+              alerts.slice(0, 3).map(a => (
+                <div key={a.id} className={`alert-card alert-${a.type}`}>
                   <div className="alert-title">
-                    <span style={{ color: '#A32D2D' }}>🔴 CRITICAL — DRN-04 Connectivity Loss</span>
-                    {isMgr && <button className="btn btn-danger btn-sm" onClick={onOverride}>Override</button>}
+                    <span style={{ color: a.type === 'critical' ? '#A32D2D' : '#633806' }}>
+                      {a.title}
+                    </span>
+                    {isMgr && a.type === 'critical' && (
+                      <button className="btn btn-danger btn-sm" onClick={onOverride}>Override</button>
+                    )}
                   </div>
-                  <div className="alert-body" style={{ color: '#791F1F' }}>
-                    Lost telemetry signal 4 min ago · Farm Beta T-17 · battery 41%
+                  <div className="alert-body" style={{ color: a.type === 'critical' ? '#791F1F' : '#412402' }}>
+                    {a.body}
                   </div>
-                  <div className="alert-time">14:32:07 UTC</div>
+                  <div className="alert-time">{a.time}</div>
                 </div>
-                <div className="alert-card alert-warn">
-                  <div className="alert-title" style={{ color: '#633806' }}>
-                    🟡 WARNING — Wind Speed Farm Beta (38 km/h)
-                  </div>
-                  <div className="alert-body" style={{ color: '#412402' }}>
-                    Approaching operational limit of 45 km/h. New dispatches suspended.
-                  </div>
-                  <div className="alert-time">14:21:52 UTC</div>
-                </div>
-              </>
+              ))
             )}
           </div>
 
@@ -144,7 +143,7 @@ export default function Dashboard({ user, onNavigate, onOverride, alertCount }) 
               <div className="card-title">📋 Recent Log</div>
               <button className="btn btn-sm" onClick={() => onNavigate('logs')}>Full log →</button>
             </div>
-            {systemLogs.slice(0, 5).map((log, i) => (
+            {logs.slice(0, 5).map((log, i) => (
               <div className="log-entry" key={i}>
                 <div className="log-time">{log.time}</div>
                 <div className={`log-level ${log.level}`}>{log.level}</div>

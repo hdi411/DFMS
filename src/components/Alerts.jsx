@@ -1,52 +1,21 @@
-import { useState } from 'react'
+import { useApp } from '../context/AppContext'
 
-const INITIAL_ALERTS = [
-  {
-    id: 1,
-    type: 'critical',
-    title: '🔴 CRITICAL — DRN-04 Connectivity Loss',
-    body: 'Drone DRN-04 lost telemetry signal 4 minutes ago at Farm Beta T-17 · last known altitude 190m · battery 41% · auto-return protocol initiated',
-    time: '14:32:07 UTC · Assigned to: J. Smith (Operations Manager)',
-  },
-  {
-    id: 2,
-    type: 'warn',
-    title: '🟡 WARNING — DRN-04 Low Battery (41%)',
-    body: 'Battery at 41% — return-to-base threshold is 35%. Recommend immediate recall or override for recovery mission.',
-    time: '14:29:14 UTC',
-  },
-  {
-    id: 3,
-    type: 'warn',
-    title: '🟡 WARNING — Wind Speed Farm Beta (38 km/h)',
-    body: 'Wind speed 38 km/h approaching operational limit of 45 km/h. New dispatches to Farm Beta suspended until conditions improve.',
-    time: '14:21:52 UTC · WFS auto-generated',
-  },
-]
-
-export default function Alerts({ onOverride, setAlertCount }) {
-  const [alerts, setAlerts] = useState(INITIAL_ALERTS)
-
-  function ackAlert(id) {
-    const updated = alerts.filter(a => a.id !== id)
-    setAlerts(updated)
-    setAlertCount(updated.length)
-  }
-
-  function ackAll() {
-    setAlerts([])
-    setAlertCount(0)
-  }
+export default function Alerts({ onOverride }) {
+  const { alerts, acknowledgeAlert, acknowledgeAllAlerts } = useApp()
 
   return (
     <div>
       <div className="page-header">
         <div>
           <div className="page-title">🔔 Alerts &amp; Incidents</div>
-          <div className="page-subtitle">Mission failure alerts · connectivity loss · battery thresholds</div>
+          <div className="page-subtitle">
+            Mission failure alerts · connectivity loss · battery thresholds
+          </div>
         </div>
         {alerts.length > 0 && (
-          <button className="btn" onClick={ackAll}>✓ Acknowledge All</button>
+          <button className="btn" onClick={acknowledgeAllAlerts}>
+            ✓ Acknowledge All
+          </button>
         )}
       </div>
 
@@ -69,12 +38,13 @@ export default function Alerts({ onOverride, setAlertCount }) {
                     Override
                   </button>
                 )}
-                <button className="btn btn-sm" onClick={() => ackAlert(a.id)}>
+                <button className="btn btn-sm" onClick={() => acknowledgeAlert(a.id)}>
                   Acknowledge
                 </button>
               </div>
             </div>
-            <div className="alert-body" style={{ color: a.type === 'critical' ? '#791F1F' : '#412402' }}>
+            <div className="alert-body"
+              style={{ color: a.type === 'critical' ? '#791F1F' : '#412402' }}>
               {a.body}
             </div>
             <div className="alert-time">{a.time}</div>

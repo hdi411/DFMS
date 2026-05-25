@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { systemLogs } from '../data/logs'
+import { useApp } from '../context/AppContext'
 
 export default function SystemLogs({ showToast }) {
+  const { logs } = useApp()
   const [filter, setFilter] = useState('ALL')
 
   const filtered = filter === 'ALL'
-    ? systemLogs
-    : systemLogs.filter(l => l.level === filter)
+    ? logs
+    : logs.filter(l => l.level === filter)
 
   return (
     <div>
@@ -52,7 +53,6 @@ export default function SystemLogs({ showToast }) {
             <span className="live-dot" /> Live · {filtered.length} entries
           </div>
         </div>
-
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 24, color: 'var(--text3)', fontSize: 12 }}>
             No log entries for this level

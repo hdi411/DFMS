@@ -1,4 +1,4 @@
-import { drones } from '../data/drones'
+import { useApp } from '../context/AppContext'
 
 function BatteryBar({ pct }) {
   const color = pct > 60 ? 'var(--acc)' : pct > 35 ? 'var(--warn)' : 'var(--danger)'
@@ -25,12 +25,20 @@ function StatusPill({ status }) {
 }
 
 export default function DroneFleet({ onOverride, showToast }) {
+  const { drones, dispatchDrone, recallDrone } = useApp()
+
   function handleAction(drone) {
-    if (drone.status === 'inflight')     showToast(`${drone.id} recall command sent — returning to base`)
-    if (drone.status === 'ready')        showToast(`${drone.id} dispatched — pre-flight check required`)
-    if (drone.status === 'critical')     onOverride()
-    if (drone.status === 'maintenance')  showToast(`${drone.id} maintenance log opened`)
-    if (drone.status === 'preflight')    showToast(`${drone.id} pre-flight checklist opened`)
+    if (drone.status === 'inflight') {
+      recallDrone(drone.id)
+      showToast(`${drone.id} recall command sent — returning to base`)
+    }
+    if (drone.status === 'ready') {
+      dispatchDrone(drone.id, 'Farm Alpha · T-1')
+      showToast(`${drone.id} dispatched to Farm Alpha`)
+    }
+    if (drone.status === 'critical')    onOverride()
+    if (drone.status === 'maintenance') showToast(`${drone.id} maintenance log opened`)
+    if (drone.status === 'preflight')   showToast(`${drone.id} pre-flight checklist opened`)
   }
 
   function actionLabel(status) {
@@ -53,7 +61,9 @@ export default function DroneFleet({ onOverride, showToast }) {
       <div className="page-header">
         <div>
           <div className="page-title">🚁 Drone Fleet</div>
-          <div className="page-subtitle">8 drones registered · availability, health &amp; certification</div>
+          <div className="page-subtitle">
+            {drones.length} drones registered · availability, health &amp; certification
+          </div>
         </div>
         <button className="btn btn-primary" onClick={() => showToast('Add drone form opened')}>
           + Add Drone
