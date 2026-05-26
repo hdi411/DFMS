@@ -12,20 +12,17 @@ export default function MaintenanceQueue({ showToast, user }) {
   const { queue, assignQueue, completeQueue } = useApp()
   const [expanded, setExpanded] = useState('MQ-001')
   const isMgr = user?.role === 'manager'
-
+  const techWorkload = (name) =>
+    queue.filter(q => q.assignedTo === name && !q.completed).length
   const critical = queue.filter(q => q.severity === 'critical').length
   const high     = queue.filter(q => q.severity === 'high').length
   const medium   = queue.filter(q => q.severity === 'medium').length
   const low      = queue.filter(q => q.severity === 'low').length
 
-  function handleAssign(id) {
-    const name = isMgr ? 'T. Nguyen' : user.name
-    assignQueue(id, name)
-    showToast(isMgr
-      ? `✅ T. Nguyen assigned to ${queue.find(q => q.id === id)?.turbine}`
-      : `✅ You have been assigned to ${queue.find(q => q.id === id)?.turbine}`
-    )
-  }
+  function handleAssign(id, name) {
+  assignQueue(id, name)
+  showToast(`✅ ${name} assigned to ${queue.find(q => q.id === id)?.turbine}`)
+}
 
   function handleComplete(id) {
     completeQueue(id)
@@ -161,9 +158,28 @@ export default function MaintenanceQueue({ showToast, user }) {
                         {!isDone && (
                           <>
                             {!isAssigned ? (
-                              <button className="btn btn-primary" onClick={() => handleAssign(q.id)}>
-                                {isMgr ? '👷 Assign Technician' : '👷 Assign to Me'}
-                              </button>
+  isMgr ? (
+    <select
+      defaultValue=""
+      onChange={e => {
+        if (e.target.value) handleAssign(q.id, e.target.value)
+      }}
+      style={{
+  width: '100%', padding: '8px 10px',
+  border: '1px solid var(--acc)', borderRadius: 8,
+  background: '#E1F5EE', color: '#085041',
+  fontSize: 11, cursor: 'pointer', fontWeight: 500
+}}
+    >
+      <option value="" disabled>👷 Assign Technician...</option>
+      <option value="T. Nguyen">T. Nguyen — {techWorkload('T. Nguyen')} tasks active</option>
+      <option value="A. Bakker">A. Bakker — {techWorkload('A. Bakker')} tasks active</option>
+    </select>
+  ) : (
+    <button className="btn btn-primary" onClick={() => handleAssign(q.id, user.name)}>
+      👷 Assign to Me
+    </button>
+  )
                             ) : (
                               !isMgr && (
                                 <button className="btn btn-primary" onClick={() => handleComplete(q.id)}>

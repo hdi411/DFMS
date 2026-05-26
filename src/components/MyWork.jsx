@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useApp } from '../context/AppContext'
 
-export default function MyWork() {
+export default function MyWork({ user }) {
+  const { queue, completeQueue } = useApp()
   const [checks, setChecks] = useState([
     { id: 1, label: 'Visual hull inspection',        done: true },
     { id: 2, label: 'Propeller integrity check',     done: true },
@@ -16,13 +18,23 @@ export default function MyWork() {
 
   const progress = Math.round((checks.filter(c => c.done).length / checks.length) * 100)
 
+  // tasks assigned to this technician from the queue
+  const myQueueTasks = queue.filter(q => q.assignedTo === user.name)
+
+  const SEVERITY_COLOR = {
+    critical: { bg: '#FCEBEB', color: '#791F1F', dot: '#E24B4A' },
+    high:     { bg: '#FFF0E0', color: '#7A3500', dot: '#E07A00' },
+    medium:   { bg: '#FFFBEE', color: '#633806', dot: '#BA7517' },
+    low:      { bg: '#F0F9F0', color: '#1A5C2A', dot: '#2E9E50' },
+  }
+
   return (
     <div>
       <div className="page-header">
         <div>
           <div className="page-title">✅ My Tasks</div>
           <div className="page-subtitle">
-            Assigned to T. Nguyen · Sprint 1 · Cert #TN-2024-88
+            Assigned to {user.name} · Sprint 1 · Cert #TN-2024-88
           </div>
         </div>
       </div>
@@ -45,11 +57,7 @@ export default function MyWork() {
                   className={`checklist-item ${c.done ? 'done' : ''}`}
                   onClick={() => toggle(c.id)}
                 >
-                  <input
-                    type="checkbox"
-                    checked={c.done}
-                    onChange={() => toggle(c.id)}
-                  />
+                  <input type="checkbox" checked={c.done} onChange={() => toggle(c.id)} />
                   {c.label}
                 </label>
               ))}
@@ -83,6 +91,75 @@ export default function MyWork() {
               <div className="progress-fill" style={{ width: '100%' }} />
             </div>
           </div>
+
+          {/* ASSIGNED FROM MAINTENANCE QUEUE */}
+          {myQueueTasks.length > 0 && (
+            <>
+              <div style={{
+                fontSize: 11, fontWeight: 600, color: 'var(--text3)',
+                textTransform: 'uppercase', letterSpacing: '.06em',
+                margin: '16px 0 8px'
+              }}>
+                Assigned Maintenance Tasks
+              </div>
+              {myQueueTasks.map(q => {
+                const sc = SEVERITY_COLOR[q.severity]
+                return (
+                  <div className="task-card" key={q.id}>
+                    <div className="task-header">
+                      <div className="task-title">{q.turbine} — {q.issue}</div>
+                      <span style={{
+                        fontSize: 10, padding: '2px 8px', borderRadius: 20,
+                        background: sc.bg, color: sc.color, fontWeight: 600
+                      }}>
+                        {q.severity.charAt(0).toUpperCase() + q.severity.slice(1)}
+                      </span>
+                    </div>
+                    <div className="task-meta">
+                      {q.id} · {q.farm} · Est. {q.estimatedTime} · Cert: {q.requiredCert}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text2)', marginBottom: 8, lineHeight: 1.5 }}>
+                      {q.notes}
+                    </div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
+                      🔩 Required Parts
+                    </div>
+                    {q.parts.map((p, i) => (
+                      <div key={i} style={{ fontSize: 11, color: 'var(--text2)', padding: '2px 0' }}>
+                        <span style={{ color: 'var(--acc)' }}>◦</span> {p}
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                      {!q.completed ? (
+                        <button
+                          className="btn btn-primary"
+                          style={{ flex: 1 }}
+                          onClick={() => completeQueue(q.id, user.name)}
+                        >
+                          ✅ Mark Complete
+                        </button>
+                      ) : (
+                        <span className="pill pill-ready" style={{ fontSize: 11 }}>
+                          ✅ Completed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {myQueueTasks.length === 0 && (
+            <div style={{
+              textAlign: 'center', padding: 20,
+              color: 'var(--text3)', fontSize: 12,
+              background: 'var(--bg2)', borderRadius: 12,
+              border: '1px solid var(--border)'
+            }}>
+              No maintenance tasks assigned yet
+            </div>
+          )}
         </div>
 
         <div>

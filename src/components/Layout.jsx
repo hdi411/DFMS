@@ -12,7 +12,6 @@ export default function Layout({ user, page, onNavigate, onLogout, onOverride, c
         <div className="nav-logo-icon">🚁</div>
         <div className="nav-brand">WindTech DFMS</div>
         <div className="nav-divider" />
-        <span className="nav-sprint-badge">Sprint 1 active · 29 pts</span>
         <div className="nav-spacer" />
         <div className="nav-alert-btn" onClick={() => onNavigate('alerts')}>
           {alertCount > 0 && <div className="alert-dot" />}

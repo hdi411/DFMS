@@ -56,6 +56,15 @@ export function AppProvider({ children }) {
   const [alerts, setAlerts]   = useState(INITIAL_ALERTS)
   const [logs, setLogs]       = useState(INITIAL_LOGS)
   const [queue, setQueue]     = useState(INITIAL_QUEUE)
+  const [flagged, setFlagged] = useState({})
+
+  function toggleFlag(id, turbine) {
+  setFlagged(prev => {
+    const next = { ...prev, [id]: !prev[id] }
+    addLog('WARN', `${turbine || id} ${next[id] ? 'flagged for second review' : 'flag removed'}`)
+    return next
+  })
+}
 
   // ── LOGS ──
   function addLog(level, message) {
@@ -108,11 +117,11 @@ export function AppProvider({ children }) {
     addLog('INFO', `${id} assigned to ${techName} · ${item?.turbine} · ${item?.issue}`)
   }
 
-  function completeQueue(id) {
-    setQueue(prev => prev.map(q => q.id === id ? { ...q, completed: true } : q))
-    const item = queue.find(q => q.id === id)
-    addLog('OK', `${id} marked complete · ${item?.turbine} · ${item?.issue}`)
-  }
+  function completeQueue(id, techName) {
+  setQueue(prev => prev.map(q => q.id === id ? { ...q, completed: true } : q))
+  const item = queue.find(q => q.id === id)
+  addLog('OK', `${item?.turbine} repair complete · ${item?.issue} · by ${techName || item?.assignedTo}`)
+}
 
   // ── OVERRIDE ──
   function confirmOverride(drone, reason, note, authoriser) {
@@ -122,14 +131,15 @@ export function AppProvider({ children }) {
   }
 
   return (
-    <AppContext.Provider value={{
-      drones, alerts, logs, queue,
-      dispatchDrone, recallDrone, updateDroneBattery,
-      acknowledgeAlert, acknowledgeAllAlerts, addAlert,
-      assignQueue, completeQueue,
-      confirmOverride,
-      addLog,
-    }}>
+  <AppContext.Provider value={{
+    drones, alerts, logs, queue,
+    dispatchDrone, recallDrone, updateDroneBattery,
+    acknowledgeAlert, acknowledgeAllAlerts, addAlert,
+    assignQueue, completeQueue,
+    confirmOverride,
+    addLog,
+    flagged, toggleFlag,
+  }}>
       {children}
     </AppContext.Provider>
   )

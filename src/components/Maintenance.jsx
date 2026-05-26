@@ -1,10 +1,5 @@
 import { useState } from 'react'
-
-const ACTIVE_DRONES = [
-  { id: 'DRN-01', location: 'Farm Alpha · T-7', battery: 87, altitude: 340, speed: 28, signal: 'Strong', duration: '1h 23m' },
-  { id: 'DRN-02', location: 'Farm Alpha · T-12', battery: 62, altitude: 280, speed: 24, signal: 'Strong', duration: '0h 58m' },
-  { id: 'DRN-04', location: 'Farm Beta · T-17', battery: 41, altitude: 190, speed: 0, signal: 'Lost', duration: '2h 01m' },
-]
+import { useApp } from '../context/AppContext'
 
 const INSPECTION_RESULTS = [
   {
@@ -184,15 +179,21 @@ function SeverityRanking({ results }) {
 }
 
 export default function Maintenance({ showToast }) {
+  const { flagged, toggleFlag, drones } = useApp()
   const [selected, setSelected] = useState('INS-001')
-  const [assigned, setAssigned] = useState({})
 
+  const activeDrones = drones
+    .filter(d => d.status === 'inflight' || d.status === 'critical')
+    .map(d => ({
+      id: d.id,
+      location: d.location,
+      battery: d.battery,
+      altitude: d.altitude,
+      speed: d.speed,
+      signal: d.status === 'critical' ? 'Lost' : 'Strong',
+      duration: d.status === 'critical' ? '2h 01m' : '1h 23m',
+    }))
   const current = INSPECTION_RESULTS.find(r => r.id === selected)
-
-  function assignTech(id) {
-    setAssigned(prev => ({ ...prev, [id]: true }))
-    showToast(`✅ Technician assigned to ${INSPECTION_RESULTS.find(r => r.id === id)?.turbine}`)
-  }
 
   return (
     <div>
@@ -207,7 +208,7 @@ export default function Maintenance({ showToast }) {
 
       {/* ACTIVE DRONES */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
-        {ACTIVE_DRONES.map(d => (
+        {activeDrones.map(d => (
           <div key={d.id} style={{
             background: 'var(--bg2)', border: `1px solid ${d.signal === 'Lost' ? '#F7C1C1' : 'var(--border)'}`,
             borderRadius: 12, padding: 12,
@@ -372,22 +373,16 @@ export default function Maintenance({ showToast }) {
 
               {/* ACTIONS */}
               <div style={{ display: 'flex', gap: 8 }}>
-                {current.humanRequired && (
-                  <button
-                    className={`btn ${assigned[current.id] ? '' : 'btn-primary'}`}
-                    style={{ flex: 1 }}
-                    onClick={() => assignTech(current.id)}
-                    disabled={assigned[current.id]}
-                  >
-                    {assigned[current.id] ? '✅ Technician Assigned' : '👷 Assign Technician'}
-                  </button>
-                )}
                 <button className="btn" style={{ flex: 1 }} onClick={() => showToast(`Report for ${current.turbine} exported`)}>
                   📄 Export Report
                 </button>
-                <button className="btn" onClick={() => showToast('Flagged for second review')}>
-                  🚩 Flag
-                </button>
+                <button
+  className="btn"
+  style={{ color: flagged[current.id] ? '#791F1F' : '', background: flagged[current.id] ? '#FCEBEB' : '', borderColor: flagged[current.id] ? '#E24B4A' : '' }}
+  onClick={() => toggleFlag(current.id, current.turbine)}
+>
+  🚩 {flagged[current.id] ? 'Flagged' : 'Flag'}
+</button>
               </div>
             </div>
           )}

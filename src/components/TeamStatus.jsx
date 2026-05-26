@@ -1,3 +1,5 @@
+import { useApp } from '../context/AppContext'
+
 const TEAM = [
   {
     name: 'J. Smith',
@@ -17,38 +19,43 @@ const TEAM = [
     ]
   },
   {
-    name: 'T. Nguyen',
-    role: 'Technician',
-    badge: 'rb-tech',
-    avatar: 'TN',
-    avatarBg: 'var(--info)',
-    status: 'online',
-    currentTask: 'Pre-flight safety check on DRN-06',
-    location: 'Hangar A — Base Station',
-    since: '14:18',
-    tasks: [
-      { label: 'Cert verification #TN-2024-88', done: true },
-      { label: 'DRN-06 pre-flight check', done: false },
-      { label: 'DRN-05 blade maintenance', done: false },
-    ]
-  },
-  {
-    name: 'A. Bakker',
-    role: 'Technician',
-    badge: 'rb-tech',
-    avatar: 'AB',
-    avatarBg: 'var(--info)',
-    status: 'online',
-    currentTask: 'On-site inspection at Farm Alpha T-9',
-    location: 'Farm Alpha — Field',
-    since: '13:55',
-    tasks: [
-      { label: 'Travel to Farm Alpha T-9', done: true },
-      { label: 'Visual corrosion inspection T-9', done: false },
-      { label: 'Bolt torque check flange joint', done: false },
-      { label: 'Submit field report', done: false },
-    ]
-  },
+  name: 'T. Nguyen',
+  role: 'Technician',
+  badge: 'rb-tech',
+  avatar: 'TN',
+  avatarBg: 'var(--info)',
+  status: 'online',
+  currentTask: 'Pre-flight safety check on DRN-06',
+  location: 'Hangar A — Base Station',
+  since: '14:18',
+  tasks: [
+    { label: 'Cert verification #TN-2024-88', done: true },
+    { label: 'DRN-06 pre-flight check', done: false },
+    ...queue.filter(q => q.assignedTo === 'T. Nguyen').map(q => ({
+      label: `${q.turbine} — ${q.issue}`,
+      done: !!q.completed
+    }))
+  ]
+},
+{
+  name: 'A. Bakker',
+  role: 'Technician',
+  badge: 'rb-tech',
+  avatar: 'AB',
+  avatarBg: 'var(--info)',
+  status: 'online',
+  currentTask: 'On-site inspection at Farm Alpha T-9',
+  location: 'Farm Alpha — Field',
+  since: '13:55',
+  tasks: [
+    { label: 'Travel to Farm Alpha T-9', done: true },
+    { label: 'Visual corrosion inspection T-9', done: false },
+    ...queue.filter(q => q.assignedTo === 'A. Bakker').map(q => ({
+      label: `${q.turbine} — ${q.issue}`,
+      done: !!q.completed
+    }))
+  ]
+},
   {
     name: 'L. Chen',
     role: 'Safety Officer',
@@ -82,6 +89,7 @@ const TEAM = [
 ]
 
 export default function TeamStatus() {
+  const { queue } = useApp()
   const online  = TEAM.filter(t => t.status === 'online')
   const offline = TEAM.filter(t => t.status === 'offline')
 
