@@ -37,14 +37,23 @@ const INITIAL_LOGS = [
 ]
 
 const INITIAL_QUEUE = [
-  { id: 'MQ-001', priority: 1, severity: 'critical', turbine: 'T-11', farm: 'Farm Alpha', issue: 'Gearbox Vibration Anomaly + Oil Leak',       assignedTo: null,       estimatedTime: '8-12 hours', requiredCert: 'Gearbox Specialist',       parts: ['Gearbox seal kit', 'Oil filter', 'Vibration damper'],          notes: 'URGENT — Immediate shutdown required. Gearbox failure risk detected at 97% confidence.' },
-  { id: 'MQ-002', priority: 2, severity: 'critical', turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Blade Surface Crack — Blade A',              assignedTo: 'A. Bakker', estimatedTime: '4-6 hours',  requiredCert: 'WindHawk X4 Blade Repair', parts: ['Composite patch kit', 'Epoxy resin', 'Surface sealant'],        notes: 'Critical crack at 60% span. Specialist repair team required.' },
-  { id: 'MQ-003', priority: 3, severity: 'high',     turbine: 'T-9',  farm: 'Farm Alpha', issue: 'Bolt Loosening — Flange Joint Section 2',    assignedTo: null,       estimatedTime: '2-3 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['M36 bolts x8', 'Torque wrench', 'Thread locker'],              notes: 'Schedule within 2 weeks. Monitor bolt tension.' },
-  { id: 'MQ-004', priority: 4, severity: 'high',     turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Leading Edge Erosion — Blade B Tip',         assignedTo: null,       estimatedTime: '3-4 hours',  requiredCert: 'WindHawk X4 Blade Repair', parts: ['Leading edge tape', 'Erosion shield', 'Surface primer'],        notes: 'Can be addressed during T-7 blade crack repair visit.' },
-  { id: 'MQ-005', priority: 5, severity: 'high',     turbine: 'T-11', farm: 'Farm Alpha', issue: 'Generator Overheating Signature',             assignedTo: null,       estimatedTime: '2-3 hours',  requiredCert: 'Electrical Systems',       parts: ['Cooling fan unit', 'Thermal paste', 'Temperature sensor'],     notes: 'Address during MQ-001 gearbox repair visit.' },
-  { id: 'MQ-006', priority: 6, severity: 'medium',   turbine: 'T-9',  farm: 'Farm Alpha', issue: 'Tower Corrosion — North Face Base',          assignedTo: null,       estimatedTime: '1-2 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['Anti-corrosion coating', 'Wire brush', 'Primer spray'],        notes: 'Non-urgent. Schedule with next routine maintenance visit.' },
-  { id: 'MQ-007', priority: 7, severity: 'medium',   turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Surface Coating Wear — Blade C Root',        assignedTo: null,       estimatedTime: '1-2 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['UV-resistant coating', 'Applicator brush'],                    notes: 'Low urgency. Can be combined with T-7 blade repair visit.' },
-  { id: 'MQ-008', priority: 8, severity: 'low',      turbine: 'T-12', farm: 'Farm Alpha', issue: 'Minor Dirt Accumulation — Blade A Surface',  assignedTo: null,       estimatedTime: '0.5 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['Cleaning solution', 'Soft brush'],                             notes: 'Routine cleaning. Schedule next cycle.' },
+  { id: 'MQ-001', priority: 1, severity: 'critical', turbine: 'T-11', farm: 'Farm Alpha', issue: 'Gearbox Vibration Anomaly + Oil Leak',      assignedTo: null,        estimatedTime: '8-12 hours', requiredCert: 'Gearbox Specialist',       parts: ['Gearbox seal kit', 'Oil filter', 'Vibration damper'],       notes: 'URGENT — Immediate shutdown required. Gearbox failure risk detected at 97% confidence.' },
+  { id: 'MQ-002', priority: 2, severity: 'critical', turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Blade Surface Crack — Blade A',             assignedTo: 'A. Bakker', estimatedTime: '4-6 hours',  requiredCert: 'WindHawk X4 Blade Repair', parts: ['Composite patch kit', 'Epoxy resin', 'Surface sealant'],    notes: 'Critical crack at 60% span. Specialist repair team required.' },
+  { id: 'MQ-003', priority: 3, severity: 'high',     turbine: 'T-9',  farm: 'Farm Alpha', issue: 'Bolt Loosening — Flange Joint Section 2',   assignedTo: null,        estimatedTime: '2-3 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['M36 bolts x8', 'Torque wrench', 'Thread locker'],           notes: 'Schedule within 2 weeks. Monitor bolt tension.' },
+  { id: 'MQ-004', priority: 4, severity: 'high',     turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Leading Edge Erosion — Blade B Tip',        assignedTo: null,        estimatedTime: '3-4 hours',  requiredCert: 'WindHawk X4 Blade Repair', parts: ['Leading edge tape', 'Erosion shield', 'Surface primer'],    notes: 'Can be addressed during T-7 blade crack repair visit.' },
+  { id: 'MQ-005', priority: 5, severity: 'high',     turbine: 'T-11', farm: 'Farm Alpha', issue: 'Generator Overheating Signature',            assignedTo: null,        estimatedTime: '2-3 hours',  requiredCert: 'Electrical Systems',       parts: ['Cooling fan unit', 'Thermal paste', 'Temperature sensor'],  notes: 'Address during MQ-001 gearbox repair visit.' },
+  { id: 'MQ-006', priority: 6, severity: 'medium',   turbine: 'T-9',  farm: 'Farm Alpha', issue: 'Tower Corrosion — North Face Base',         assignedTo: null,        estimatedTime: '1-2 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['Anti-corrosion coating', 'Wire brush', 'Primer spray'],     notes: 'Non-urgent. Schedule with next routine maintenance visit.' },
+  { id: 'MQ-007', priority: 7, severity: 'medium',   turbine: 'T-7',  farm: 'Farm Alpha', issue: 'Surface Coating Wear — Blade C Root',       assignedTo: null,        estimatedTime: '1-2 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['UV-resistant coating', 'Applicator brush'],                 notes: 'Low urgency. Can be combined with T-7 blade repair visit.' },
+  { id: 'MQ-008', priority: 8, severity: 'low',      turbine: 'T-12', farm: 'Farm Alpha', issue: 'Minor Dirt Accumulation — Blade A Surface', assignedTo: null,        estimatedTime: '0.5 hours',  requiredCert: 'WindHawk X4 / X5',         parts: ['Cleaning solution', 'Soft brush'],                          notes: 'Routine cleaning. Schedule next cycle.' },
+]
+
+const INITIAL_PREFLIGHT = [
+  { id: 1, label: 'Visual hull inspection',        done: true },
+  { id: 2, label: 'Propeller integrity check',     done: true },
+  { id: 3, label: 'Battery level ≥ 80% confirmed', done: true },
+  { id: 4, label: 'GPS calibration & signal test', done: false },
+  { id: 5, label: 'Camera systems test (4K)',       done: false },
+  { id: 6, label: 'Collision avoidance sensors',   done: false },
 ]
 
 function timestamp() {
@@ -52,23 +61,46 @@ function timestamp() {
 }
 
 export function AppProvider({ children }) {
-  const [drones, setDrones]   = useState(INITIAL_DRONES)
-  const [alerts, setAlerts]   = useState(INITIAL_ALERTS)
-  const [logs, setLogs]       = useState(INITIAL_LOGS)
-  const [queue, setQueue]     = useState(INITIAL_QUEUE)
-  const [flagged, setFlagged] = useState({})
-
-  function toggleFlag(id, turbine) {
-  setFlagged(prev => {
-    const next = { ...prev, [id]: !prev[id] }
-    addLog('WARN', `${turbine || id} ${next[id] ? 'flagged for second review' : 'flag removed'}`)
-    return next
-  })
-}
+  const [drones,          setDrones]          = useState(INITIAL_DRONES)
+  const [alerts,          setAlerts]          = useState(INITIAL_ALERTS)
+  const [logs,            setLogs]            = useState(INITIAL_LOGS)
+  const [queue,           setQueue]           = useState(INITIAL_QUEUE)
+  const [flagged,         setFlagged]         = useState({})
+  const [preflightChecks, setPreflightChecks] = useState(INITIAL_PREFLIGHT)
 
   // ── LOGS ──
   function addLog(level, message) {
     setLogs(prev => [{ time: timestamp(), level, message }, ...prev])
+  }
+
+  // ── PREFLIGHT ──
+  function toggleCheck(id) {
+  setPreflightChecks(prev => {
+    const item = prev.find(c => c.id === id)
+    if (!item) return prev
+    const newDone = !item.done
+    const updated = prev.map(c => c.id === id ? { ...c, done: newDone } : c)
+    return updated
+  })
+  setPreflightChecks(prev => {
+    const item = prev.find(c => c.id === id)
+    if (!item) return prev
+    setLogs(l => {
+      const msg = `T. Nguyen ${item.done ? 'completed' : 'unchecked'}: ${item.label}`
+      if (l[0]?.message === msg) return l
+      return [{ time: timestamp(), level: 'OK', message: msg }, ...l]
+    })
+    return prev
+  })
+}
+
+  // ── FLAGS ──
+  function toggleFlag(id, turbine) {
+    setFlagged(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      addLog('WARN', `${turbine || id} ${next[id] ? 'flagged for second review' : 'flag removed'}`)
+      return next
+    })
   }
 
   // ── DRONES ──
@@ -88,8 +120,8 @@ export function AppProvider({ children }) {
 
   function updateDroneBattery() {
     setDrones(prev => prev.map(d => {
-      if (d.status === 'inflight')  return { ...d, battery: Math.max(10, d.battery - 1) }
-      if (d.status === 'ready')     return { ...d, battery: Math.min(100, d.battery + 2) }
+      if (d.status === 'inflight') return { ...d, battery: Math.max(10, d.battery - 1) }
+      if (d.status === 'ready')    return { ...d, battery: Math.min(100, d.battery + 2) }
       return d
     }))
   }
@@ -110,7 +142,7 @@ export function AppProvider({ children }) {
     setAlerts(prev => [{ id, type, title, body, time: timestamp() + ' UTC' }, ...prev])
   }
 
-  // ── MAINTENANCE QUEUE ──
+  // ── QUEUE ──
   function assignQueue(id, techName) {
     setQueue(prev => prev.map(q => q.id === id ? { ...q, assignedTo: techName } : q))
     const item = queue.find(q => q.id === id)
@@ -118,10 +150,10 @@ export function AppProvider({ children }) {
   }
 
   function completeQueue(id, techName) {
-  setQueue(prev => prev.map(q => q.id === id ? { ...q, completed: true } : q))
-  const item = queue.find(q => q.id === id)
-  addLog('OK', `${item?.turbine} repair complete · ${item?.issue} · by ${techName || item?.assignedTo}`)
-}
+    setQueue(prev => prev.map(q => q.id === id ? { ...q, completed: true } : q))
+    const item = queue.find(q => q.id === id)
+    addLog('OK', `${item?.turbine} repair complete · ${item?.issue} · by ${techName || item?.assignedTo}`)
+  }
 
   // ── OVERRIDE ──
   function confirmOverride(drone, reason, note, authoriser) {
@@ -131,15 +163,16 @@ export function AppProvider({ children }) {
   }
 
   return (
-  <AppContext.Provider value={{
-    drones, alerts, logs, queue,
-    dispatchDrone, recallDrone, updateDroneBattery,
-    acknowledgeAlert, acknowledgeAllAlerts, addAlert,
-    assignQueue, completeQueue,
-    confirmOverride,
-    addLog,
-    flagged, toggleFlag,
-  }}>
+    <AppContext.Provider value={{
+      drones, alerts, logs, queue, flagged, preflightChecks,
+      dispatchDrone, recallDrone, updateDroneBattery,
+      acknowledgeAlert, acknowledgeAllAlerts, addAlert,
+      assignQueue, completeQueue,
+      confirmOverride,
+      addLog,
+      toggleFlag,
+      toggleCheck,
+    }}>
       {children}
     </AppContext.Provider>
   )

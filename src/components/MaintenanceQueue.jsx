@@ -12,8 +12,13 @@ export default function MaintenanceQueue({ showToast, user }) {
   const { queue, assignQueue, completeQueue } = useApp()
   const [expanded, setExpanded] = useState('MQ-001')
   const isMgr = user?.role === 'manager'
-  const techWorkload = (name) =>
-    queue.filter(q => q.assignedTo === name && !q.completed).length
+  const STATIC_TASKS = {
+  'T. Nguyen': 1,
+  'A. Bakker': 1,
+}
+
+const techWorkload = (name) =>
+  (STATIC_TASKS[name] || 0) + queue.filter(q => q.assignedTo === name && !q.completed).length
   const critical = queue.filter(q => q.severity === 'critical').length
   const high     = queue.filter(q => q.severity === 'high').length
   const medium   = queue.filter(q => q.severity === 'medium').length

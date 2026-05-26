@@ -2,21 +2,8 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 
 export default function MyWork({ user }) {
-  const { queue, completeQueue } = useApp()
-  const [checks, setChecks] = useState([
-    { id: 1, label: 'Visual hull inspection',        done: true },
-    { id: 2, label: 'Propeller integrity check',     done: true },
-    { id: 3, label: 'Battery level ≥ 80% confirmed', done: true },
-    { id: 4, label: 'GPS calibration & signal test', done: false },
-    { id: 5, label: 'Camera systems test (4K)',       done: false },
-    { id: 6, label: 'Collision avoidance sensors',   done: false },
-  ])
-
-  function toggle(id) {
-    setChecks(checks.map(c => c.id === id ? { ...c, done: !c.done } : c))
-  }
-
-  const progress = Math.round((checks.filter(c => c.done).length / checks.length) * 100)
+  const { queue, completeQueue, preflightChecks, toggleCheck } = useApp()
+const progress = Math.round((preflightChecks.filter(c => c.done).length / preflightChecks.length) * 100)
 
   // tasks assigned to this technician from the queue
   const myQueueTasks = queue.filter(q => q.assignedTo === user.name)
@@ -45,22 +32,27 @@ export default function MyWork({ user }) {
           <div className="task-card">
             <div className="task-header">
               <div className="task-title">Pre-flight Safety Check — DRN-06</div>
-              <span className="pill pill-preflight">In Progress</span>
+              <span className={`pill ${progress === 100 ? 'pill-ready' : 'pill-preflight'}`}>
+  {progress === 100 ? 'Complete ✅' : 'In Progress'}
+</span>
             </div>
             <div className="task-meta">
               IN-10 · Epic 3: Integration · 3 story points · Due: Today 16:00
             </div>
             <div className="checklist">
-              {checks.map(c => (
-                <label
-                  key={c.id}
-                  className={`checklist-item ${c.done ? 'done' : ''}`}
-                  onClick={() => toggle(c.id)}
-                >
-                  <input type="checkbox" checked={c.done} onChange={() => toggle(c.id)} />
-                  {c.label}
-                </label>
-              ))}
+              {preflightChecks.map(c => (
+  <label
+    key={c.id}
+    className={`checklist-item ${c.done ? 'done' : ''}`}
+  >
+    <input
+      type="checkbox"
+      checked={c.done}
+      onChange={() => toggleCheck(c.id)}
+    />
+    {c.label}
+  </label>
+))}
             </div>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: progress + '%' }} />
