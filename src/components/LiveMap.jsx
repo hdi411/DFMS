@@ -12,10 +12,13 @@ const BASE_POSITIONS = {
   'DRN-08': { cx: 370, cy: 155, fill: '#888780' },
 }
 
-const BOUNDS = {
-  'DRN-01': { minX: 60,  maxX: 175, minY: 55,  maxY: 150 },
-  'DRN-02': { minX: 80,  maxX: 185, minY: 60,  maxY: 155 },
-  'DRN-04': { minX: 460, maxX: 580, minY: 55,  maxY: 140 },
+const FARM_ALPHA_BOUNDS = { minX: 55, maxX: 180, minY: 55, maxY: 150 }
+const FARM_BETA_BOUNDS  = { minX: 455, maxX: 580, minY: 55, maxY: 140 }
+
+function getBounds(drone) {
+  if (drone.status !== 'inflight' && drone.status !== 'critical') return null
+  if (drone.location?.includes('Beta')) return FARM_BETA_BOUNDS
+  return FARM_ALPHA_BOUNDS
 }
 
 function randomDrift(val, min, max) {
@@ -44,34 +47,54 @@ export default function LiveMap({ showToast }) {
   // animate flying drones every 2s
   useEffect(() => {
     const interval = setInterval(() => {
-      setPositions(prev => {
-        const next = { ...prev }
-        drones.forEach(d => {
-          if (d.status === 'inflight' || d.status === 'critical') {
-            const b = BOUNDS[d.id]
-            if (b && next[d.id]) {
-              next[d.id] = {
-                ...next[d.id],
-                cx: randomDrift(next[d.id].cx, b.minX, b.maxX),
-                cy: randomDrift(next[d.id].cy, b.minY, b.maxY),
-              }
-            }
+  setPositions(prev => {
+    const next = { ...prev }
+    drones.forEach(d => {
+      if (!next[d.id]) return
+      const b = getBounds(d)
+
+      if ((d.status === 'inflight' || d.status === 'critical') && b) {
+        const cur = next[d.id]
+        const targetX = (b.minX + b.maxX) / 2
+        const targetY = (b.minY + b.maxY) / 2
+
+        // if far from target zone, move toward it gradually
+        const distX = targetX - cur.cx
+        const distY = targetY - cur.cy
+        const dist = Math.sqrt(distX * distX + distY * distY)
+
+        if (dist > 20) {
+          // still flying toward target zone
+          next[d.id] = {
+            ...cur,
+            cx: cur.cx + distX * 0.25,
+            cy: cur.cy + distY * 0.25,
           }
-          // recall: move back to base
-          if (d.status === 'ready' && next[d.id]) {
-            const base = BASE_POSITIONS[d.id]
-            if (base) {
-              next[d.id] = {
-                ...next[d.id],
-                cx: base.cx,
-                cy: base.cy,
-              }
-            }
+        } else {
+          // arrived — start drifting normally
+          next[d.id] = {
+            ...cur,
+            cx: randomDrift(cur.cx, b.minX, b.maxX),
+            cy: randomDrift(cur.cy, b.minY, b.maxY),
           }
-        })
-        return next
-      })
-    }, 2000)
+        }
+      }
+
+      if (d.status === 'ready') {
+        const base = BASE_POSITIONS[d.id]
+        if (base) {
+          const cur = next[d.id]
+          next[d.id] = {
+            ...cur,
+            cx: cur.cx + (base.cx - cur.cx) * 0.3,
+            cy: cur.cy + (base.cy - cur.cy) * 0.3,
+          }
+        }
+      }
+    })
+    return next
+  })
+}, 2000)
     return () => clearInterval(interval)
   }, [drones])
 
@@ -133,46 +156,48 @@ export default function LiveMap({ showToast }) {
 
             {/* flight trails */}
             {inFlight.map(d => {
-              const pos = positions[d.id]
-              if (!pos) return null
-              return (
-                <line key={d.id + '-trail'}
-                  x1={320} y1={155} x2={pos.cx} y2={pos.cy}
-                  stroke={droneColor(d.status)}
-                  strokeWidth="1" strokeDasharray="4 4" opacity=".3"
-                />
-              )
-            })}
+  const pos = positions[d.id]
+  if (!pos) return null
+  return (
+    <line key={d.id + '-trail'}
+      x1={320} y1={155} x2={pos.cx} y2={pos.cy}
+      stroke={droneColor(d.status)}
+      strokeWidth="1" strokeDasharray="4 4" opacity=".3"
+      style={{ transition: 'x2 2s ease, y2 2s ease' }}
+    />
+  )
+})}
 
             {/* drones */}
             {drones.map(d => {
-              const pos = positions[d.id]
-              if (!pos) return null
-              const color = droneColor(d.status)
-              const isFlying = d.status === 'inflight' || d.status === 'critical'
+  const pos = positions[d.id]
+  if (!pos) return null
+  const color = droneColor(d.status)
+  const isFlying = d.status === 'inflight' || d.status === 'critical'
+  const transition = isFlying ? 'transform 2s ease' : 'transform 0.5s ease'
 
-              return (
-                <g key={d.id} style={{ cursor: 'pointer' }}
-                  onClick={() => setTooltip(tooltip?.id === d.id ? null : { ...d, ...pos })}>
-                  {d.status === 'critical' && (
-                    <circle cx={pos.cx} cy={pos.cy} r="13" fill="#E24B4A" fillOpacity=".25" className="drone-blink" />
-                  )}
-                  {d.status === 'inflight' && (
-                    <circle cx={pos.cx} cy={pos.cy} r="13" fill="#1D9E75" fillOpacity=".2" className="drone-pulse" />
-                  )}
-                  <circle
-                    cx={pos.cx} cy={pos.cy} r="9"
-                    fill={color} stroke="#fff" strokeWidth="2"
-                    style={{ transition: isFlying ? 'cx 1.8s ease, cy 1.8s ease' : 'none' }}
-                  />
-                  <text x={pos.cx} y={pos.cy + 4}
-                    textAnchor="middle" fontSize="8"
-                    fill="#fff" fontWeight="700" fontFamily="inherit">
-                    {d.id.replace('DRN-', '')}
-                  </text>
-                </g>
-              )
-            })}
+  return (
+    <g
+      key={d.id}
+      style={{ cursor: 'pointer', transform: `translate(${pos.cx}px, ${pos.cy}px)`, transition }}
+      onClick={() => setTooltip(tooltip?.id === d.id ? null : { ...d, ...pos })}
+    >
+      {d.status === 'critical' && (
+        <circle r="13" fill="#E24B4A" fillOpacity=".25" className="drone-blink" />
+      )}
+      {d.status === 'inflight' && (
+        <circle r="13" fill="#1D9E75" fillOpacity=".2" className="drone-pulse" />
+      )}
+      <circle r="9" fill={color} stroke="#fff" strokeWidth="2" />
+      <text
+        textAnchor="middle" dy="4"
+        fontSize="8" fill="#fff" fontWeight="700" fontFamily="inherit"
+      >
+        {d.id.replace('DRN-', '')}
+      </text>
+    </g>
+  )
+})}
           </svg>
 
           {/* tooltip */}
