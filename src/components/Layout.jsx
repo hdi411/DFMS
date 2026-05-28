@@ -51,6 +51,7 @@ export default function Layout({ user, page, onNavigate, onLogout, onOverride, c
           {isMgr && <>
             <div className="nav-section">Operations</div>
             <NavItem icon="👥" label="Team Status"    id="teamstatus" page={page} onNavigate={onNavigate} />
+            <NavItem icon="🤖" label="AI Assistant" id="aiagent" page={page} onNavigate={onNavigate} />
             <NavItem icon="🔑" label="Access Control" id="access"     page={page} onNavigate={onNavigate} />
             <div className="nav-section">Maintenance</div>
             <NavItem icon="🔧" label="Maintenance"       id="maintenance"      page={page} onNavigate={onNavigate} />

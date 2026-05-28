@@ -16,6 +16,7 @@ import MyWork from './components/MyWork'
 import Maintenance from './components/Maintenance'
 import MaintenanceQueue from './components/MaintenanceQueue'
 import OverrideModal from './components/OverrideModal'
+import AIAgent from './components/AIAgent'
 
 export default function App() {
   const [user, setUser]               = useState(null)
@@ -63,6 +64,7 @@ export default function App() {
     mywork:           <MyWork           {...pageProps} />,
     maintenance:      <Maintenance      {...pageProps} />,
     maintenancequeue: <MaintenanceQueue {...pageProps} />,
+    aiagent:          <AIAgent          {...pageProps} />,
   }
 
   return (
