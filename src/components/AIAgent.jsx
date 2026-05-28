@@ -11,7 +11,7 @@ const SUGGESTIONS = [
 ]
 
 export default function AIAgent({ user }) {
-  const { drones, alerts, queue, logs } = useApp()
+ const { drones, alerts, queue, logs, recallDrone, dispatchDrone, assignQueue, acknowledgeAlert, acknowledgeAllAlerts } = useApp()
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -63,42 +63,155 @@ The current user is ${user.name} (${user.role}).`
   }
 
   async function sendMessage() {
-    if (!input.trim() || loading) return
+  if (!input.trim() || loading) return
 
-    const userMsg = { role: 'user', content: input }
-    setMessages(prev => [...prev, userMsg])
-    setInput('')
-    setLoading(true)
+  const userMsg = { role: 'user', content: input }
+  setMessages(prev => [...prev, userMsg])
+  setInput('')
+  setLoading(true)
 
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_KEY}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          max_tokens: 1000,
-          messages: [
-            { role: 'system', content: buildSystemPrompt() },
-            ...[...messages, userMsg].map(m => ({
-              role: m.role,
-              content: m.content,
-            })),
-          ],
-        }),
-      })
+  const tools = [
+    {
+      type: 'function',
+      function: {
+        name: 'recallDrone',
+        description: 'Recall a drone back to base station',
+        parameters: {
+          type: 'object',
+          properties: {
+            droneId: { type: 'string', description: 'The drone ID e.g. DRN-01' }
+          },
+          required: ['droneId']
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'dispatchDrone',
+        description: 'Dispatch a drone to a location',
+        parameters: {
+          type: 'object',
+          properties: {
+            droneId:   { type: 'string', description: 'The drone ID e.g. DRN-06' },
+            location:  { type: 'string', description: 'Target location e.g. Farm Alpha · T-1' }
+          },
+          required: ['droneId', 'location']
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'assignQueue',
+        description: 'Assign a maintenance task to a technician',
+        parameters: {
+          type: 'object',
+          properties: {
+            taskId:   { type: 'string', description: 'Task ID e.g. MQ-001' },
+            techName: { type: 'string', description: 'Technician name e.g. T. Nguyen' }
+          },
+          required: ['taskId', 'techName']
+        }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'acknowledgeAllAlerts',
+        description: 'Acknowledge and clear all active alerts',
+        parameters: { type: 'object', properties: {} }
+      }
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'acknowledgeAlert',
+        description: 'Acknowledge a specific alert by ID',
+        parameters: {
+          type: 'object',
+          properties: {
+            alertId: { type: 'number', description: 'Alert ID number' }
+          },
+          required: ['alertId']
+        }
+      }
+    },
+  ]
 
-      const data = await response.json()
-      const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not get a response.'
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 1000,
+        tools,
+        tool_choice: 'auto',
+        messages: [
+          { role: 'system', content: buildSystemPrompt() },
+          ...[...messages, userMsg].map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+        ],
+      }),
+    })
+
+    const data = await response.json()
+    const choice = data.choices?.[0]
+
+    // AI wants to call a function
+    if (choice?.finish_reason === 'tool_calls') {
+      const toolCalls = choice.message.tool_calls
+      const actions = []
+
+      for (const call of toolCalls) {
+        const args = JSON.parse(call.function.arguments)
+        const name = call.function.name
+
+        if (name === 'recallDrone') {
+          recallDrone(args.droneId)
+          actions.push(`✅ Recalled **${args.droneId}** to base station`)
+        }
+        if (name === 'dispatchDrone') {
+          dispatchDrone(args.droneId, args.location)
+          actions.push(`✅ Dispatched **${args.droneId}** to ${args.location}`)
+        }
+        if (name === 'assignQueue') {
+          assignQueue(args.taskId, args.techName)
+          actions.push(`✅ Assigned **${args.taskId}** to ${args.techName}`)
+        }
+        if (name === 'acknowledgeAllAlerts') {
+          acknowledgeAllAlerts()
+          actions.push(`✅ All alerts acknowledged`)
+        }
+        if (name === 'acknowledgeAlert') {
+          acknowledgeAlert(args.alertId)
+          actions.push(`✅ Alert #${args.alertId} acknowledged`)
+        }
+      }
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: actions.join('\n')
+      }])
+
+    } else {
+      // normal text response
+      const reply = choice?.message?.content || 'Sorry, I could not get a response.'
       setMessages(prev => [...prev, { role: 'assistant', content: reply }])
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
     }
 
-    setLoading(false)
+  } catch (err) {
+    setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${err.message}` }])
   }
+
+  setLoading(false)
+}
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
