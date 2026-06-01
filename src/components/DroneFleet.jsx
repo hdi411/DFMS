@@ -24,7 +24,8 @@ function StatusPill({ status }) {
   return <span className={`pill ${s.cls}`}>{s.label}</span>
 }
 
-export default function DroneFleet({ onOverride, showToast }) {
+export default function DroneFleet({ onOverride, showToast, user }) {
+  const isMgr = user?.role === 'manager'
   const { drones, dispatchDrone, recallDrone } = useApp()
 
   function handleAction(drone) {
@@ -101,13 +102,17 @@ export default function DroneFleet({ onOverride, showToast }) {
                 <td>{d.lastInspection}</td>
                 <td><StatusPill status={d.status} /></td>
                 <td>
-                  <button
-                    className={actionClass(d.status)}
-                    onClick={() => handleAction(d)}
-                  >
-                    {actionLabel(d.status)}
-                  </button>
-                </td>
+  {isMgr ? (
+    <button
+      className={actionClass(d.status)}
+      onClick={() => handleAction(d)}
+    >
+      {actionLabel(d.status)}
+    </button>
+  ) : (
+    <span style={{ fontSize: 11, color: 'var(--text3)' }}>View only</span>
+  )}
+</td>
               </tr>
             ))}
           </tbody>
